@@ -1,20 +1,26 @@
 import React , { Component } from 'react';
 import { StyleSheet, Text, View, Image, ActivityIndicator } from 'react-native';
 import Weather from "./Weather";
+import SvgUri from 'react-native-svg-uri';
 
-const API_KEY = "ec3ab88f167d3ab0b0487fdc6ad9644e";
+
+const WEATHER_KEY = "ec3ab88f167d3ab0b0487fdc6ad9644e";
+// const AIR_KEY = "6sz22MrPmc7B3JWJb";
 
 export default class App extends Component {
   state = {
     isLodaded: false,
     error: null,
     temperature: null,
-    name: null
+    name: null,
+    clothestemp: "A",
   };
+
   componentDidMount() {
     navigator.geolocation.getCurrentPosition( 
       position => {
         this._getWeather(position.coords.latitude, position.coords.longitude)
+        // this._getAirPollution(position.coords.latitude, position.coords.longitude)
       },
       error => {
         this.setState({
@@ -25,28 +31,109 @@ export default class App extends Component {
   }
 
   _getWeather= ( lat, lon ) => {
-    fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}`) 
+    fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_KEY}`
+    ) 
     .then(response => response.json())
     .then(json => {
+      console.log("temp", Math.floor(json.main.temp - 273.15));
       console.log(json);
       this.setState({
-        temperature: json.main.temp,
+        temperature: Math.floor(json.main.temp - 273.15),
         name: json.weather[0].main,
         isLodaded: true
       })
+      this._getClothesDesc(Math.floor(json.main.temp - 273.15));
     });
   };
 
+  _getClothesDesc= ( temperature ) => {
+    var clothestemp;
+      if( temperature >= 27){
+        clothestemp = 'A'
+      }
+      if( temperature >= 23 && temperature < 27){
+        clothestemp = "B"
+      }
+      if( temperature >= 20 && temperature < 23){
+        clothestemp = "C"
+      }
+      if( temperature >= 17 && temperature < 20){
+        clothestemp = "D"
+      }
+      if( temperature >= 12 && temperature < 17){
+        clothestemp = "E"
+      }
+      if( temperature >= 10 && temperature < 12){
+        clothestemp = "F"
+      }
+      if( temperature >= 6 && temperature < 10){
+        clothestemp = "G"
+      }
+      if( temperature < 6 ){
+        clothestemp = "H"
+      }
+      console.log("clothestemp", clothestemp);
+      console.log("temperature", temperature);
+      this.setState({
+        clothestemp: clothestemp
+      });
+  };
+
+
+// _getAirPollution = ( lat, lon ) => {
+//     fetch(`http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${AIR_KEY}`
+//     ) 
+//     .then(response => response.json())
+//     .then(json => {
+//       console.log(json);
+//       console.log("aqius", json.data.current.pollution.aqius);
+//       this.setState({
+//         pollutionAqius: json.data.current.pollution.aqius,
+//         // time: json.data.current.pollution.ts,
+//         // criteria: json.data.current.pollution.mainus,
+//         isLodaded: true
+//       })
+//       this._getAirPollutionDesc(json.data.current.pollution.aqius);
+//     });
+//   };
+
+// _getAirPollutionDesc= ( pollutionAqius ) => {
+//     var pollutionDesc;
+//       if( pollutionAqius >= 0 && pollutionAqius <= 50){
+//         pollutionDesc = "GOOD"
+//       }
+//       if( pollutionAqius >= 51 && pollutionAqius <= 100){
+//         pollutionDesc = "MODERATE"
+//       }
+//       if( pollutionAqius >= 101 && pollutionAqius <= 150){
+//         pollutionDesc = "LITTLEUNHEALTHY"
+//       }
+//       if( pollutionAqius >= 151 && pollutionAqius <= 200){
+//         pollutionDesc = "UNHEALTHY"
+//       }
+//       if( pollutionAqius >= 201 && pollutionAqius <= 300){
+//         pollutionDesc = "VERYUNHEALTHY"
+//       }
+//       if( pollutionAqius >= 301 ){
+//         pollutionDesc = "HAZARDOUS"
+//       }
+//       console.log("pollutionDesc1", pollutionDesc);
+//       this.setState({
+//         pollutionDesc: pollutionDesc
+//       });
+//   };
+
+
   render() {
-    const { isLodaded, error, temperature, name } = this.state;
+    const { isLodaded, error, temperature, name, clothestemp } = this.state;
     return (
-      <View style={styles.container}>
+      <View style={styles.container} >   
        {isLodaded ? (
-       <Weather weatherName={name} temp={Math.floor(temperature - 273.15)} /> 
-       ) : (       
+        <Weather weatherName={name} temp={temperature} clothestemp={clothestemp} /> 
+       ) : (      
         <View style={styles.loading}>
-          <ActivityIndicator />
-            <Text style={styles.loadingText}>그냥,날씨 로딩중 좀 기둘 ...</Text>
+            <SvgUri style={styles.logo} source={require('./assets/logo-weather.svg')}/>
+            <SvgUri style={styles.bottomlogo} source={require('./assets/aikloy.svg')}/>
             {error ? <Text style={styles.errorText}>{error}</Text>: null}
         </View>
        )}
@@ -58,7 +145,7 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff'
+    backgroundColor: "#6ECED6",
   },
   errorText: {
     color: "red",
@@ -67,13 +154,22 @@ const styles = StyleSheet.create({
   },
   loading: {
     flex: 1,
-    backgroundColor: "#FDF6AA",
-    justifyContent:"flex-end",
-    paddingLeft: 25,
-    paddingRight: 25
+    backgroundColor: "#6ECED6",
+    justifyContent:"center",
+    alignItems: "center",
   },
-  loadingText: {
-    fontSize: 38,
-    marginBottom: 24
+  logo: {
+    flex: 8,
+    height: 130,
+    width: 114,
+    justifyContent:"center",
+    alignItems: "center",
+  },
+  bottomlogo: {
+    flex: 1,
+    height: 28,
+    width: 112,
+    justifyContent:"center",
+    alignItems: "center",
   }
 });
