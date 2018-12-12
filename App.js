@@ -5,22 +5,23 @@ import SvgUri from 'react-native-svg-uri';
 
 
 const WEATHER_KEY = "ec3ab88f167d3ab0b0487fdc6ad9644e";
-// const AIR_KEY = "6sz22MrPmc7B3JWJb";
+const AIR_KEY = "6sz22MrPmc7B3JWJb";
 
 export default class App extends Component {
   state = {
     isLodaded: false,
     error: null,
     temperature: null,
-    name: null,
+    name: "Clear",
     clothestemp: "A",
+    pollutionDesc: "HAZARDOUS"
   };
 
   componentDidMount() {
     navigator.geolocation.getCurrentPosition( 
       position => {
         this._getWeather(position.coords.latitude, position.coords.longitude)
-        // this._getAirPollution(position.coords.latitude, position.coords.longitude)
+        this._getAirPollution(position.coords.latitude, position.coords.longitude)
       },
       error => {
         this.setState({
@@ -30,13 +31,11 @@ export default class App extends Component {
     );
   }
 
-  _getWeather= ( lat, lon ) => {
+  _getWeather = ( lat, lon ) => {
     fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_KEY}`
     ) 
     .then(response => response.json())
     .then(json => {
-      console.log("temp", Math.floor(json.main.temp - 273.15));
-      console.log(json);
       this.setState({
         temperature: Math.floor(json.main.temp - 273.15),
         name: json.weather[0].main,
@@ -72,64 +71,60 @@ export default class App extends Component {
       if( temperature < 6 ){
         clothestemp = "H"
       }
-      console.log("clothestemp", clothestemp);
-      console.log("temperature", temperature);
       this.setState({
         clothestemp: clothestemp
       });
   };
 
 
-// _getAirPollution = ( lat, lon ) => {
-//     fetch(`http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${AIR_KEY}`
-//     ) 
-//     .then(response => response.json())
-//     .then(json => {
-//       console.log(json);
-//       console.log("aqius", json.data.current.pollution.aqius);
-//       this.setState({
-//         pollutionAqius: json.data.current.pollution.aqius,
-//         // time: json.data.current.pollution.ts,
-//         // criteria: json.data.current.pollution.mainus,
-//         isLodaded: true
-//       })
-//       this._getAirPollutionDesc(json.data.current.pollution.aqius);
-//     });
-//   };
+_getAirPollution = ( lat, lon ) => {
+    fetch(`http://api.airvisual.com/v2/nearest_city?lat=${lat}&lon=${lon}&key=${AIR_KEY}`
+    ) 
+    .then(response => response.json())
+    .then(json => {
+      this.setState({
+        pollutionAqius: json.data.current.pollution.aqius,
+        // time: json.data.current.pollution.ts,
+        // criteria: json.data.current.pollution.mainus,
+        isLodaded: true
+      })
+      this._getAirPollutionDesc(json.data.current.pollution.aqius);
+    });
+  };
 
-// _getAirPollutionDesc= ( pollutionAqius ) => {
-//     var pollutionDesc;
-//       if( pollutionAqius >= 0 && pollutionAqius <= 50){
-//         pollutionDesc = "GOOD"
-//       }
-//       if( pollutionAqius >= 51 && pollutionAqius <= 100){
-//         pollutionDesc = "MODERATE"
-//       }
-//       if( pollutionAqius >= 101 && pollutionAqius <= 150){
-//         pollutionDesc = "LITTLEUNHEALTHY"
-//       }
-//       if( pollutionAqius >= 151 && pollutionAqius <= 200){
-//         pollutionDesc = "UNHEALTHY"
-//       }
-//       if( pollutionAqius >= 201 && pollutionAqius <= 300){
-//         pollutionDesc = "VERYUNHEALTHY"
-//       }
-//       if( pollutionAqius >= 301 ){
-//         pollutionDesc = "HAZARDOUS"
-//       }
-//       console.log("pollutionDesc1", pollutionDesc);
-//       this.setState({
-//         pollutionDesc: pollutionDesc
-//       });
-//   };
+_getAirPollutionDesc= ( pollutionAqius ) => {
+    var pollutionDesc;
+      if( pollutionAqius >= 0 && pollutionAqius <= 50){
+        pollutionDesc = "GOOD"
+      }
+      if( pollutionAqius >= 51 && pollutionAqius <= 100){
+        pollutionDesc = "MODERATE"
+      }
+      if( pollutionAqius >= 101 && pollutionAqius <= 150){
+        pollutionDesc = "LITTLEUNHEALTHY"
+      }
+      if( pollutionAqius >= 151 && pollutionAqius <= 200){
+        pollutionDesc = "UNHEALTHY"
+      }
+      if( pollutionAqius >= 201 && pollutionAqius <= 300){
+        pollutionDesc = "VERYUNHEALTHY"
+      }
+      if( pollutionAqius >= 301 ){
+        pollutionDesc = "HAZARDOUS"
+      }
+      console.log("pollutionDesc1", pollutionDesc);
+      this.setState({
+        pollutionDesc: pollutionDesc
+      });
+  };
 
 
   render() {
-    const { isLodaded, error, temperature, name, clothestemp } = this.state;
+    const { isLodaded, error, temperature, name, clothestemp, pollutionDesc } = this.state;
     return (
       <View style={styles.container} >   
        {isLodaded ? (
-        <Weather weatherName={name} temp={temperature} clothestemp={clothestemp} /> 
+        <Weather weatherName={name} temp={temperature} clothestemp={clothestemp} pollutionDesc={pollutionDesc} /> 
        ) : (      
         <View style={styles.loading}>
             <SvgUri style={styles.logo} source={require('./assets/logo-weather.svg')}/>
